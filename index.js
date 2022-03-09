@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-var cors = require('cors');
+const cors = require('cors');
 
 /** Cross-Origin Resource Sharing (CORS) */
 var corsOptions = {
