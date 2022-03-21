@@ -37,9 +37,4 @@ router.put('/update', (req, res) => {
     )
 });
 
-router.delete('/:id', (req, res) => {
-    dbConnection.collection("records").delete({ "_id": ObjectId(req.params.id) })
-    return res.send("Document removed.");
-});
-
 module.exports = router;
