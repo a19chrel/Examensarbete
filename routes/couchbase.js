@@ -1,15 +1,18 @@
 const couchbase = require("couchbase");
 const router = require('express').Router();
 const {connectToDatabase} = require('../db/couchbase');
+const {startTimer, stopTimer} = require("../dataLogger");
 
 
 router.post('/', async (req, res) => {
     const {cluster} = await connectToDatabase();
 
     try {
+        startTimer("Couchbase-POST");
         await cluster.query(`INSERT INTO records (KEY, VALUE)
                              VALUES ("${req.body._id}", ${JSON.stringify(req.body)});`)
             .then((response) => {
+                stopTimer("Couchbase-POST");
                 res.send(response.rows)
             })
             .catch((error) => res.status(500).send({
@@ -24,10 +27,12 @@ router.get('/:date', async (req, res) => {
     const {cluster} = await connectToDatabase();
 
     try {
+        startTimer("Couchbase-GET");
         await cluster.query(`SELECT r.*
                              FROM records r
                              WHERE r.cdc_case_earliest_dt = "${req.params.date}";`)
             .then((response) => {
+                stopTimer("Couchbase-GET");
                 res.send(response.rows)
             })
             .catch((error) => res.status(500).send({
@@ -51,8 +56,10 @@ router.put('/:date', async (req, res) => {
     console.log(query);
 
     try {
+        startTimer("Couchbase-PUT");
         await cluster.query(query)
             .then((response) => {
+                stopTimer("Couchbase-PUT");
                 res.send(response.rows)
             })
             .catch((error) => res.status(500).send({
