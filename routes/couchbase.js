@@ -1,4 +1,3 @@
-const couchbase = require("couchbase");
 const router = require('express').Router();
 const {connectToDatabase} = require('../db/couchbase');
 const {startTimer, stopTimer} = require("../dataLogger");
