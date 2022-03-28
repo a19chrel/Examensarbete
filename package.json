@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "connect-couchbase": "^0.2.10",
     "cors": "^2.8.5",
     "couchbase": "^4.0.0",
     "dotenv": "^16.0.0",
