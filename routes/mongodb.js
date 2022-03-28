@@ -9,32 +9,36 @@ let dbConnection;
 
 client.connect(function (err, db) {
     if (err || !db) console.log(err)
-    dbConnection = db.db('examensarbetet-pilot');
+    dbConnection = db.db('examensarbete-pilot');
     console.log('Successfully connected to MongoDB.');
 });
 
-router.get('/', (req, res) => {
-
-    dbConnection.collection("records").find(req.body).toArray(function (err, result) {
+router.get('/:date', (req, res) => {
+    console.log(req.params.id)
+    dbConnection.collection("records").find({"cdc_case_earliest_dt": req.params.date}).toArray(function (err, result) {
         if (err) console.log(err)
-        else return res.status(200).json(result);
+        else {
+            return res.status(200).json(result)
+        }
     });
 })
 
-router.post('/create', (req, res) => {
-
-    dbConnection.collection("records").insertOne(req.body);
-    return res.send("Record added")
+router.post('/', (req, res) => {
+    dbConnection.collection("records").insertOne(req.body, function (err, result) {
+        if (err) console.log(err)
+        else {
+            return res.status(200).json(result)
+        }
+    });
 });
 
-router.put('/update', (req, res) => {
-    dbConnection.collection("records").updateOne(
-        { "_id": ObjectId(req.params.id) },
-        {
-            $set: req.body
-        },
-        {upsert: true}
-    )
+router.put('/:date', async (req, res) => {
+    dbConnection.collection("records").updateMany({"cdc_case_earliest_dt": req.params.date }, {$set: req.body}, function (error, result) {
+        if (error) console.log(error)
+        else {
+            return res.status(200).json(result)
+        }
+    });
 });
 
 module.exports = router;
