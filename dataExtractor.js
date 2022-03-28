@@ -4,9 +4,9 @@ const readline = require('readline');
 async function extractData() {
     // Settings
     const dataStartRow = 805;
-    const startIndex = 0;
-    const numOfObject = 40000000;
-    const objectPerFile = 1000000;
+    const startIndex = 50000000;
+    const numOfObject = 100000;
+    const objectPerFile = 100000;
 
     const fileStream = fs.createReadStream('rows.json');
     const rl = readline.createInterface({
@@ -26,17 +26,23 @@ async function extractData() {
             let jsonArray = JSON.parse(line.substr(2));
 
             fileData.push({
+                sid: jsonArray[0],
+                _id: jsonArray[1],
                 created_at: jsonArray[3],
                 updated_at: jsonArray[5],
                 cdc_case_earliest_dt: jsonArray[8],
+                cdc_report_date: jsonArray[9],
+                pos_spec_dt: jsonArray[10],
+                onset_dt: jsonArray[11],
                 current_status: jsonArray[12],
                 sex: jsonArray[13],
                 age_group: jsonArray[14],
+                race_ethnicity_combined: jsonArray[15],
                 hosp_yn: jsonArray[16],
                 icu_yn: jsonArray[17],
                 death_yn: jsonArray[18],
-                medcond: jsonArray[19]
-            })
+                medcond_yn: jsonArray[19]
+            });
             iteration = iteration + 1;
             if (fileData.length === objectPerFile) {
                 fs.writeFileSync(`output/data${iteration/objectPerFile}.json`, JSON.stringify(fileData, null, 2));
