@@ -13,6 +13,13 @@ client.connect(function (err, db) {
     dbConnection = db.db('examensarbete-pilot');
     console.log('Successfully connected to MongoDB.');
 });
+router.get('/get/init', (req, res) => {
+
+    dbConnection.collection("records").distinct('cdc_case_earliest_dt', {}, {}, function (err, result) {
+        if (err) console.log(err)
+        else return res.status(200).json(result)
+    });
+})
 
 router.get('/:date', (req, res) => {
     console.log(req.params.id)

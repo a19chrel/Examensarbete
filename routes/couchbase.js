@@ -3,6 +3,25 @@ const router = require('express').Router();
 const {connectToDatabase} = require('../db/couchbase');
 const {startTimer, stopTimer} = require("../dataLogger");
 
+router.get('/get/init', async (req, res) => {
+    const {cluster} = await connectToDatabase();
+
+    try {
+        await cluster.query(`SELECT cdc_case_earliest_dt
+                             FROM records
+                             GROUP BY cdc_case_earliest_dt;`)
+            .then((response) => {
+                let dateList = [];
+                response.rows.forEach(row => dateList.push(row["cdc_case_earliest_dt"]));
+                res.json(dateList);
+            })
+            .catch((error) => res.status(500).send({
+                "message": `Query failed: ${error.message}`
+            }))
+    } catch (e) {
+        console.error(e)
+    }
+});
 
 router.post('/', async (req, res) => {
     const {cluster} = await connectToDatabase();
