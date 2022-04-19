@@ -57,13 +57,13 @@ async function connectToDatabase() {
     const cluster = await createCouchbaseCluster()
     const bucket = cluster.bucket(CB_BUCKET);
     const collection = bucket.defaultCollection();
-    const profileCollection = bucket.collection('profile');
+    const recordsCollection = bucket.collection('records');
 
     let dbConnection = {
         cluster,
         bucket,
         collection,
-        profileCollection,
+        recordsCollection,
     }
 
     return dbConnection;

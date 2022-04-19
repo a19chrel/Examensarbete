@@ -6,32 +6,24 @@ router.get('/get/init', async (req, res) => {
     const {cluster} = await connectToDatabase();
 
     try {
-        await cluster.query(`SELECT cdc_case_earliest_dt
-                             FROM records
-                             GROUP BY cdc_case_earliest_dt;`)
-            .then((response) => {
-                let dateList = [];
-                response.rows.forEach(row => dateList.push(row["cdc_case_earliest_dt"]));
-                res.json(dateList);
-            })
-            .catch((error) => res.status(500).send({
-                "message": `Query failed: ${error.message}`
-            }))
+        const response =  await cluster.query(`SELECT _id FROM records GROUP BY _id;`);
+        let dateList = [];
+        response.rows.forEach(row => dateList.push(row["_id"]));
+        res.json(dateList);
     } catch (e) {
         console.error(e)
     }
 });
 
 router.post('/', async (req, res) => {
-    const {cluster} = await connectToDatabase();
+    const {collection} = await connectToDatabase();
 
     try {
         startTimer("Couchbase-POST");
-        await cluster.query(`INSERT INTO records (KEY, VALUE)
-                             VALUES ("${req.body._id}", ${JSON.stringify(req.body)});`)
+        await collection.insert(req.body._id, req.body)
             .then((response) => {
                 stopTimer("Couchbase-POST");
-                res.send(response.rows)
+                res.send(response)
             })
             .catch((error) => res.status(500).send({
                 "message": `Query failed: ${error.message}`
@@ -41,17 +33,15 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.get('/:date', async (req, res) => {
-    const {cluster} = await connectToDatabase();
+router.get('/:id', async (req, res) => {
+    const {collection} = await connectToDatabase();
 
     try {
         startTimer("Couchbase-GET");
-        await cluster.query(`SELECT r.*
-                             FROM records r
-                             WHERE r.cdc_case_earliest_dt = "${req.params.date}";`)
+        await collection.get(req.params.id)
             .then((response) => {
                 stopTimer("Couchbase-GET");
-                res.send(response.rows)
+                res.send(response.content)
             })
             .catch((error) => res.status(500).send({
                 "message": `Query failed: ${error.message}`
@@ -61,24 +51,31 @@ router.get('/:date', async (req, res) => {
     }
 });
 
-router.put('/:date', async (req, res) => {
-    const {cluster} = await connectToDatabase();
+router.put('/:id', async (req, res) => {
+    const { collection } = await connectToDatabase();
+    let doc;
+    try {
+        await collection.get(req.params.id)
+            .then((response) => {
+                doc = response.content;
+            })
+            .catch((error) => res.status(500).send({
+                "message": `Query failed: ${error.message}`
+            }))
+    } catch (e) {
+        console.error(e)
+    }
 
-    //Query builder
-    let changesString = "";
     Object.keys(req.body).forEach(key => {
-        changesString += `${key} = "${req.body[key]}"`;
-        if (Object.keys(req.body)[Object.keys(req.body).length - 1] !== key) changesString += `, `;
-    })
-    let query = `UPDATE records._default._default set ${changesString} WHERE cdc_case_earliest_dt = "${req.params.date}";`
-    console.log(query);
+       doc[key] = req.body[key];
+    });
 
     try {
         startTimer("Couchbase-PUT");
-        await cluster.query(query)
+        await collection.replace(req.params.id, doc)
             .then((response) => {
                 stopTimer("Couchbase-PUT");
-                res.send(response.rows)
+                res.send(response)
             })
             .catch((error) => res.status(500).send({
                 "message": `Query failed: ${error.message}`

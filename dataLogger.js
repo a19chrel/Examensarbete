@@ -7,7 +7,7 @@ const pathPrefix = "output/result/"
 const timer = {};
 
 function startTimer(name) {
-    timer[name] = new Date().getTime();
+    timer[name] = process.hrtime.bigint();
 }
 
 function stopTimer(name) {
@@ -17,7 +17,8 @@ function stopTimer(name) {
         return false;
     }
 
-    let stopTime = new Date().getTime() - timer[name];
+    let time = process.hrtime.bigint();
+    let stopTime = parseInt(time - timer[name]) / 1000;
     delete timer[name];
     writeToFile(name, stopTime);
 
@@ -34,7 +35,7 @@ function writeToFile(name, time) {
 
     const outputArray = JSON.parse(fs.readFileSync(`${pathPrefix}${name}.json`));
     outputArray.push(parseInt(time));
-    console.log(time);
+    console.log("TIME (Micro)", time);
     fs.writeFileSync(`${pathPrefix}${name}.json`, JSON.stringify(outputArray, null, 2));
 
 }

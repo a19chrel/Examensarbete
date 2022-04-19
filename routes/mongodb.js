@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { MongoClient } = require('mongodb');
+const {MongoClient} = require('mongodb');
 const client = new MongoClient("mongodb://localhost", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -15,16 +15,16 @@ client.connect(function (err, db) {
 });
 router.get('/get/init', (req, res) => {
 
-    dbConnection.collection("records").distinct('cdc_case_earliest_dt', {}, {}, function (err, result) {
+    dbConnection.collection("records").distinct('_id', {}, {}, function (err, result) {
         if (err) console.log(err)
         else return res.status(200).json(result)
     });
 })
 
-router.get('/:date', (req, res) => {
-    console.log(req.params.id)
+router.get('/:id', (req, res) => {
+
     startTimer("MongoDB-GET");
-    dbConnection.collection("records").find({"cdc_case_earliest_dt": req.params.date}).toArray(function (err, result) {
+    dbConnection.collection("records").find({"_id": req.params.id}).toArray(function (err, result) {
         if (err) console.log(err)
         else {
             stopTimer("MongoDB-GET");
@@ -44,9 +44,9 @@ router.post('/', (req, res) => {
     });
 });
 
-router.put('/:date', async (req, res) => {
+router.put('/:id', async (req, res) => {
     startTimer("MongoDB-PUT");
-    dbConnection.collection("records").updateMany({"cdc_case_earliest_dt": req.params.date }, {$set: req.body}, function (error, result) {
+    dbConnection.collection("records").updateMany({"_id": req.params.id}, {$set: req.body}, function (error, result) {
         if (error) console.log(error)
         else {
             stopTimer("MongoDB-PUT");
