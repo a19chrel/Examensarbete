@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Examensarbetet - Klient</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
+            integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="data.js"></script>
+    <script>
+
+        //Global Varibles
+        let caseTimes;
+        let methods = ["GET", "PUT", "POST"];
+        let databases = ["MongoDB", "Couchbase"]
+
+        function generateOptions() {
+            var databaseSelection = document.getElementById("selectDatabase");
+            databaseSelection.innerHTML = "";
+            databases.forEach(database => databaseSelection.innerHTML += `<option>${database}</option>`);
+
+            var methodSelection = document.getElementById("selectMethod");
+            methodSelection.innerHTML = "";
+            methods.forEach(method => methodSelection.innerHTML += `<option>${method}</option>`);
+        }
+
+        async function getCaseTimes(database) {
+            res = await fetch(
+                `http://localhost:3000/${database}/get/init`, {
+                    method: "GET",
+                    headers: {'Content-type': 'application/json'},
+                }
+            );
+            return await res.json();
+        }
+
+        function getMethod() {
+            return document.getElementById(`selectMethod`).value;
+        }
+
+        function getRandom(min, max) {
+            return Math.floor(max * Math.random()) + min;
+        }
+
+        function getDatabase() {
+            return document.getElementById(`selectDatabase`).value;
+        }
+
+        function getRuns() {
+            return parseInt(document.getElementById(`numOfRuns`).value);
+        }
+
+        async function runAll() {
+
+            for (const method of methods) {
+                for (const database of databases) {
+                    await startScript(database, method);
+                }
+            }
+        }
+
+        async function startScript(database = getDatabase(), method = getMethod(), runs = getRuns()) {
+
+            if (method == "POST") {
+                if (data.length < runs) {
+                    console.log("There is not egnoth data objects in 'data' to make this run.");
+                    return;
+                }
+                data = data.slice(0, runs);
+            }
+            document.getElementById(`running`).style.display = "block";
+            document.getElementById(`notRunning`).style.display = "none";
+
+            if (method == "GET" || method == "PUT") caseTimes = await getCaseTimes(database);
+
+            for (let i = 1; i <= runs; i++) {
+                document.getElementById(`iterationCounter`).innerHTML = `${i} of ${runs} | ${database} | ${method}`;
+                let result;
+                if (method == "POST") result = await sendRequest(database, method, data[i])
+                else result = await sendRequest(database, method, i)
+            }
+
+            document.getElementById(`notRunning`).style.display = "block";
+            document.getElementById(`running`).style.display = "none";
+        }
+
+        async function sendRequest(database, metod, dataObject) {
+            let res, date;
+            switch (metod) {
+                case "GET":
+                    date = caseTimes[dataObject];
+                    res = await fetch(
+                        `http://localhost:3000/${database}/${date}`, {
+                            method: metod,
+                            headers: {'Content-type': 'application/json'},
+                        }
+                    );
+                    break;
+
+                case "PUT":
+                    date = caseTimes[getRandom(0, caseTimes.length)]
+                    res = await fetch(
+                        `http://localhost:3000/${database}/${date}`, {
+                            method: metod,
+                            headers: {'Content-type': 'application/json'},
+                            body: JSON.stringify({sex: "Error"})
+                        }
+                    );
+                    break;
+
+                case "POST":
+                    res = await fetch(
+                        `http://localhost:3000/${database}/`, {
+                            method: metod,
+                            headers: {'Content-type': 'application/json'},
+                            body: JSON.stringify(dataObject)
+                        }
+                    );
+
+            }
+
+            const result = await res.json();
+            return result;
+        }
+    </script>
+    <style>
+        #running {
+            display: none;
+        }
+    </style>
+</head>
+<body onload="generateOptions()">
+<div style="width: 800px; margin: auto">
+    <div id="running">
+        <pre id="iterationCounter"></pre>
+        <pre id="result"></pre>
+    </div>
+    <div id="notRunning">
+        <label>
+            Number of runs
+            <input id="numOfRuns" type="number" value="10">
+        </label>
+        <label>
+            Type of request
+            <select id="selectMethod">
+            </select>
+        </label>
+        <label>
+            Database
+            <select id="selectDatabase">
+            </select>
+        </label>
+
+        <button onclick="startScript()">Start</button>
+        <button onclick="runAll()">Start (Run all)</button>
+    </div>
+
+</div>
+</body>
+</html>
