@@ -4,9 +4,9 @@ const readline = require('readline');
 async function extractData() {
     // Settings
     const dataStartRow = 805;
-    const startIndex = 50000000;
-    const numOfObject = 100000;
-    const objectPerFile = 100000;
+    const startIndex = 0;
+    const numOfObject = 50000000;
+    const objectPerFile = 500000;
 
     const fileStream = fs.createReadStream('rows.json');
     const rl = readline.createInterface({
