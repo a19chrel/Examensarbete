@@ -61,6 +61,7 @@
 
         async function startScript(database = getDatabase(), method = getMethod(), runs = getRuns()) {
 
+            runs = runs / 10;
             if (method == "POST") {
                 if (data.length < runs) {
                     console.log("There is not egnoth data objects in 'data' to make this run.");
@@ -71,13 +72,18 @@
             document.getElementById(`running`).style.display = "block";
             document.getElementById(`notRunning`).style.display = "none";
 
-            if (method == "GET" || method == "PUT") caseTimes = await getCaseTimes(database);
+            if (method == "GET" || method == "PUT") {
+                caseTimes = await getCaseTimes(database);
+            }
 
-            for (let i = 1; i <= runs; i++) {
-                document.getElementById(`iterationCounter`).innerHTML = `${i} of ${runs} | ${database} | ${method}`;
-                let result;
-                if (method == "POST") result = await sendRequest(database, method, data[i])
-                else result = await sendRequest(database, method, i)
+            for (let i = 0; i < runs; i++) {
+                for (let x = 1; x <= 10; x++) {
+                    document.getElementById(`iterationCounter`).innerHTML = `${i*10+x} of ${runs*10} | ${database} | ${method}`;
+                    let result;
+                    if (method == "POST") result = await sendRequest(database, method, data[i])
+                    else result = await sendRequest(database, method, i);
+                }
+
             }
 
             document.getElementById(`notRunning`).style.display = "block";
@@ -85,12 +91,12 @@
         }
 
         async function sendRequest(database, metod, dataObject) {
-            let res, date;
+            let res, id;
             switch (metod) {
                 case "GET":
-                    date = caseTimes[dataObject];
+                    id = caseTimes[dataObject];
                     res = await fetch(
-                        `http://localhost:3000/${database}/${date}`, {
+                        `http://localhost:3000/${database}/${id}`, {
                             method: metod,
                             headers: {'Content-type': 'application/json'},
                         }
@@ -98,9 +104,9 @@
                     break;
 
                 case "PUT":
-                    date = caseTimes[getRandom(0, caseTimes.length)]
+                    id = caseTimes[getRandom(0, caseTimes.length)]
                     res = await fetch(
-                        `http://localhost:3000/${database}/${date}`, {
+                        `http://localhost:3000/${database}/${id}`, {
                             method: metod,
                             headers: {'Content-type': 'application/json'},
                             body: JSON.stringify({sex: "Error"})
