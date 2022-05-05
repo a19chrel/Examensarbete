@@ -6,7 +6,7 @@ router.get('/get/init', async (req, res) => {
     const {cluster} = await connectToDatabase();
 
     try {
-        const response =  await cluster.query(`SELECT _id FROM records GROUP BY _id;`);
+        const response = await cluster.query(`SELECT _id FROM records GROUP BY _id;`);
         let dateList = [];
         response.rows.forEach(row => dateList.push(row["_id"]));
         res.json(dateList);
@@ -18,9 +18,16 @@ router.get('/get/init', async (req, res) => {
 router.post('/', async (req, res) => {
     const {collection} = await connectToDatabase();
 
+    // Check if document already exists, if so remove it.
+    try {
+        let document = await collection.get(req.body._id).then(async (response) => {
+            await collection.remove(req.body._id);
+        })
+    } catch (e) {}
+
     try {
         startTimer("Couchbase-POST");
-        await collection.insert(req.body._id, req.body)
+        collection.insert(req.body._id, req.body)
             .then((response) => {
                 stopTimer("Couchbase-POST");
                 res.send(response)
@@ -52,7 +59,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-    const { collection } = await connectToDatabase();
+    const {collection} = await connectToDatabase();
     let doc;
     try {
         await collection.get(req.params.id)
@@ -67,7 +74,7 @@ router.put('/:id', async (req, res) => {
     }
 
     Object.keys(req.body).forEach(key => {
-       doc[key] = req.body[key];
+        doc[key] = req.body[key];
     });
 
     try {

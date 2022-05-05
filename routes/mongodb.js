@@ -33,7 +33,10 @@ router.get('/:id', (req, res) => {
     });
 })
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
+
+    let document = await dbConnection.collection("records").findOne({_id: req.body._id});
+    if (document) await dbConnection.collection("records").deleteOne({_id: req.body._id});
     startTimer("MongoDB-POST");
     dbConnection.collection("records").insertOne(req.body, function (err, result) {
         if (err) console.log(err)
