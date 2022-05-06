@@ -10,14 +10,20 @@ let dbConnection;
 
 client.connect(function (err, db) {
     if (err || !db) console.log(err)
-    dbConnection = db.db('examensarbete-pilot');
+    dbConnection = db.db('examensarbete');
     console.log('Successfully connected to MongoDB.');
 });
 router.get('/get/init', (req, res) => {
 
-    dbConnection.collection("records").distinct('_id', {}, {}, function (err, result) {
+    dbConnection.collection("records").find().limit(10000).toArray(function (err, result) {
         if (err) console.log(err)
-        else return res.status(200).json(result)
+        else {
+            idArray = [];
+            result.forEach(document => {
+                idArray.push(document["_id"]);
+            })
+            return res.status(200).json(idArray)
+        }
     });
 })
 

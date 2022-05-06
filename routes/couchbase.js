@@ -6,7 +6,7 @@ router.get('/get/init', async (req, res) => {
     const {cluster} = await connectToDatabase();
 
     try {
-        const response = await cluster.query(`SELECT _id FROM records GROUP BY _id;`);
+        const response = await cluster.query(`SELECT _id FROM records LIMIT 10000;`);
         let dateList = [];
         response.rows.forEach(row => dateList.push(row["_id"]));
         res.json(dateList);
